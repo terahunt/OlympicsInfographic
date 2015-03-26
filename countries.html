@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<script src="js/libs/d3.v2.min.js"></script>
+
+<link rel="stylesheet" href="css/normalize.min.css">
+<link rel="stylesheet" href="css/main.css">
+<link href='http://fonts.googleapis.com/css?family=Cinzel+Decorative' rel='stylesheet' type='text/css'>
+<link href='http://fonts.googleapis.com/css?family=Open+Sans' rel='stylesheet' type='text/css'>
+
+<script src="js/libs/jquery-1.7.2.min.js"></script>
+
+<script src="js/geo/olympicPart.js"></script>
+
+<body>
+	<article id="region">
+		<div id="worldMap" />
+		
+		<h1>Nation's Participation in the Summer Olympics Throughout the Years</h1>
+		
+		<!--Update output year -->
+		<script>
+		function updateSliderOutput(y) 
+		{
+			document.querySelector('#curYear').value = y;
+		}
+		</script>
+  
+		<!--Creation of slider and output year label -->
+		<div id="yearSlider">
+			<input type="range" id="nYear" min="1896" max="2012" step="4" value="1896"
+			oninput="updateSliderOutput(value)">
+			<output id="curYear">1896</output>
+		</div>
+		
+		<script>
+			var width = screen.width,
+				height = screen.height,
+				centered;
+
+			var projectiono = d3.geo.mercator() 
+				.scale(width)
+				.translate([0, 130]);
+
+			var path = d3.geo.path()
+				.projection(projectiono);
+
+			var svg = d3.select("#worldMap").append("svg")
+				.attr("width", width)
+				.attr("height", height);
+
+			svg.append("rect")
+				.attr("class", "background")
+				.attr("width", width)
+				.attr("height", height);
+				
+			var locations = svg.append("g")
+				.attr("transform", "translate(" + width / 2 + "," + height / 2 + ")")
+				.append("g")
+				.attr("id", "locations");
+				
+				//When the output year changes, change number of locations on map.
+				d3.select("#nYear").on("input", function() {
+					update(+this.value);
+				});
+
+				function update(selectedYear)
+				{
+					//Remove all previous locations on map. 
+					d3.selectAll("circle").remove();
+					
+					locations.selectAll("circleLoc")
+					.data(data)
+					.enter()
+					.append("circle")
+					.filter(function(d) {return d.year==selectedYear})
+					.attr("cx",0)
+					.attr("cy",0)
+					.attr("r",2)
+					.attr("transform", function(d) {
+								projectionX = projectiono([ d.longitude, d.latitude ])[0]; 
+								projectionY = projectiono([ d.longitude, d.latitude ])[1]; 
+								return "translate(" + projectionX + "," + projectionY + ")"; 
+						})
+						.attr("title",function (d,i) {
+								return d.country;
+							})
+						.attr("class","location");	 
+				}
+		</script>
+	</article>
+
+</body>
+</html>
