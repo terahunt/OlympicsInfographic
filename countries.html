@@ -8,38 +8,48 @@
 <link href='http://fonts.googleapis.com/css?family=Open+Sans' rel='stylesheet' type='text/css'>
 
 <script src="js/libs/jquery-1.7.2.min.js"></script>
+<script src="js/yearScript.js"></script>
 
 <script src="js/geo/olympicPart.js"></script>
 
-<body>
+<body onload="update('1896')">
 	<article id="region">
 		<div id="worldMap" />
 		
 		<h1>Nation's Participation in the Summer Olympics Throughout the Years</h1>
 		
+		<p id="description">The Olympics originated in Ancient Greece around the time of 776 B.C, with 
+		a foot race as the only sport. Eventually, more sports were added to these ancient games, but
+		the ancient Olympic games are said to have ended around 393 A.D. In 1896, the Olympic games were revived,
+		with 14 countries participating and a total of 43 events. Today, the Olympics have grown to immense proportions with more 
+		than 200 countries participating and hundreds of events.</p>
+		
 		<!--Update output year -->
 		<script>
 		function updateSliderOutput(y) 
 		{
-			document.querySelector('#curYear').value = y;
+			document.getElementById('curYear').name = y; 
+			var year = getYear(y); 
+			document.getElementById('curYear').value = year;
 		}
 		</script>
   
 		<!--Creation of slider and output year label -->
 		<div id="yearSlider">
-			<input type="range" id="nYear" min="1896" max="2012" step="4" value="1896"
-			oninput="updateSliderOutput(value)">
-			<output id="curYear">1896</output>
+			<input type="range" id="nYear" min="0" max="26" step="1" value="0"
+			oninput="updateSliderOutput(value); update(curYear.value);">
+			<output id="curYear" name="0">1896</output>		
 		</div>
-		
+	
+		<div id="worldMap" />
 		<script>
-			var width = screen.width,
-				height = screen.height,
+			var width = screen.width-40,
+				height = screen.height-40,
 				centered;
 
 			var projectiono = d3.geo.mercator() 
 				.scale(width)
-				.translate([0, 130]);
+				.translate([0, -40]);
 
 			var path = d3.geo.path()
 				.projection(projectiono);
@@ -58,36 +68,63 @@
 				.append("g")
 				.attr("id", "locations");
 				
-				//When the output year changes, change number of locations on map.
-				d3.select("#nYear").on("input", function() {
-					update(+this.value);
+			d3.json("js/geo/countries.geo.json", function(json) 
+			{
+				locations.selectAll("path")
+				.data(json.features)
+				.enter().append("path")
+				.attr("d", path)
+				.attr("class", function(d,i) {
+					if(d.id=="ARG" || d.id=="USA" || d.id=="CAN") {
+						return "highlight "+d.id;
+					}
+					return d.id;
 				});
+			});
 
 				function update(selectedYear)
 				{
 					//Remove all previous locations on map. 
 					d3.selectAll("circle").remove();
 					
-					locations.selectAll("circleLoc")
+					locations.selectAll("circle")
 					.data(data)
 					.enter()
 					.append("circle")
 					.filter(function(d) {return d.year==selectedYear})
-					.attr("cx",0)
-					.attr("cy",0)
-					.attr("r",2)
-					.attr("transform", function(d) {
-								projectionX = projectiono([ d.longitude, d.latitude ])[0]; 
-								projectionY = projectiono([ d.longitude, d.latitude ])[1]; 
-								return "translate(" + projectionX + "," + projectionY + ")"; 
-						})
-						.attr("title",function (d,i) {
-								return d.country;
+					.each(function(d)
+					{
+						d3.select(this)
+						.attr("cx",0)
+						.attr("cy",0)
+						.attr("r",2)
+						.attr("transform", function(d) {
+									projectionX = projectiono([ d.longitude, d.latitude ])[0]; 
+									projectionY = projectiono([ d.longitude, d.latitude ])[1]; 
+									return "translate(" + projectionX + "," + projectionY + ")"; 
 							})
-						.attr("class","location");	 
-				}
+						.attr("title",function (d,i){
+						
+									return d.country;
+								})
+						.attr("class","location")
+						.transition()
+						.delay(1000)
+						.style("fill", "#EFF4DC");
+							
+					}); 
+				}	 
 		</script>
 	</article>
+	
+		<div id="sources">
+			<p>Sources</p>
+			<ul>
+				<li>http://www.olympic.org/</li>
+				<li>http://www.history.com/this-day-in-history/first-modern-olympics-is-held</li>
+				<li>http://en.wikipedia.org/wiki/List_of_participating_nations_at_the_Summer_Olympic_Games</li>
+			</ul>
+		</div>
 
 </body>
 </html>
